@@ -282,3 +282,23 @@ classDiagram
 
 **GitHub:** https://github.com/pojectgame12/HomeWork4  
 **itch.io:** https://projectgame12.itch.io/homework-4-shadow-switch-echo-shift
+
+
+## Final Gameplay Verification
+
+The following tests were completed successfully:
+
+- Shadow Switch: core gameplay works.
+- Physics Bonus 3D: movement and jumping work.
+- Physics Bonus 3D: crate pushing and pressure plate work.
+- Physics Bonus 3D: exit portal works.
+- Echo Shift: echoes replay after 10 seconds.
+- Echo Shift: both switches open the door.
+- Echo Shift: victory and game-over conditions work.
+- Echo Shift: restart and maximum echo limit work.
+- WebGL: six-scene build succeeded.
+- itch.io: browser gameplay tested successfully.
+
+No gameplay-related Console errors were reported
+during the completed tests.
+
