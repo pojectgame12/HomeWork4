@@ -1,6 +1,6 @@
-# Homework 4 — Shadow Switch
+# Homework 4 — Shadow Switch + Echo Shift
 
-**Unity 6.3.25f1 | 2D core game + 3D physics bonus | C#**
+**Unity 6.3.25f1 | Two original 2D game concepts + a 3D physics demonstration | C#**
 
 ## Overview
 
@@ -8,20 +8,24 @@ Shadow Switch is a physics-based platform puzzle. The player must collect a crys
 
 The **Physics Bonus (3D)** is a separate, small physics challenge that demonstrates Unity's 3D `CharacterController`: move around the arena, push a Rigidbody crate onto a pressure switch, then reach the exit portal.
 
-> **Scope:** This README documents the Shadow Switch project only. If the assignment requires N+1 *original game ideas*, document and submit the other required projects separately as well.
+The project contains **two distinct original game loops**: Shadow Switch and Echo Shift. The **Physics Bonus (3D)** is a demonstration of Unity physics features, not a third original game concept.
+
+**Echo Shift** is a time-loop platform puzzle: every ten seconds, a replay of the player's actions becomes an echo. Coordinate up to three echoes to hold two pressure plates and open the exit.
 
 ## How to run
 
 1. Open the Unity project folder in **Unity 6000.3.25f1** (or a compatible Unity 6 editor).
 2. Open `Assets/Scenes/MainMenu.unity`.
 3. Press **Play** in the **Game** window (not Device Simulator for keyboard testing).
-4. Choose **PLAY LEVEL 2** or **PHYSICS BONUS (3D)**.
+4. Choose **SHADOW SWITCH**, **PHYSICS BONUS (3D)**, or **ECHO SHIFT**.
 
 **Shadow Switch controls:** A/D or arrow keys = move; Space = jump; E = lamp on/off; J/L or mouse = aim; R = restart; Escape = main menu.
 
 **Physics Bonus 3D controls:** W/A/S/D = move; Space = jump; E = push the crate by raycast; R = restart; Escape = main menu.
 
-The repository contains five scenes: `MainMenu`, `Level02`, `Victory`, `GameOver`, `PhysicsBonus3D`.
+**Echo Shift controls:** A/D or arrows = move; Space/W = jump; R = restart; Escape = main menu.
+
+The finished project contains six scenes: `MainMenu`, `Level02`, `Victory`, `GameOver`, `PhysicsBonus3D`, and `EchoShift`. Make sure all six scenes have been committed to GitHub.
 
 ## Core game loop and win/loss conditions
 
@@ -46,6 +50,8 @@ Assets/
     Homework3BuildExporter.cs
     Homework4ProjectSetup.cs
     Homework4BuildExporter.cs
+    Homework4EchoShiftBuilder.cs
+    Homework4AllGamesBuildExporter.cs
   Prefabs/
   Scenes/
     MainMenu.unity
@@ -53,7 +59,11 @@ Assets/
     Victory.unity
     GameOver.unity
     PhysicsBonus3D.unity
+    EchoShift.unity
+  EchoShift/Art/
   Scripts/
+    EchoShift/     EchoFrame.cs, EchoPlayer.cs, EchoGhost.cs,
+                   EchoPressurePlate.cs, EchoDoor.cs, EchoExit.cs, EchoLoopManager.cs
     Player/        PlayerController.cs, MobileInputState.cs, CharacterController3D.cs
     Game/          GameSession.cs, LevelController.cs, GoalTrigger.cs,
                    PitTrigger.cs, PhysicsChallengeManager.cs
@@ -187,16 +197,17 @@ The following were confirmed during manual Unity Editor testing, as reported by 
 - Crate pushing with E: working.
 - Green pressure switch: working.
 - Purple exit portal: working.
+- Echo Shift: opens, ten-second echo replay works, two switches open the gate, and the win screen appears.
 - Unity Console: no red errors observed during those checks.
 
-Still verify separately before submission: time-limit loss, pit loss, victory requiring a crystal, lamp energy exhaustion, swinging orb collection, WebGL build and browser gameplay.
+Still verify separately before submission: Echo Shift loss after eight unfinished loops, max-three-echo replacement, R restart, Escape navigation; Shadow Switch time-limit loss, pit loss, victory requiring a crystal, lamp energy exhaustion, swinging orb collection; WebGL build and browser gameplay.
 
 ## Export and publish
 
 1. If needed, run `Homework 4 > Upgrade Existing Project` in the Editor to generate the settings asset and bonus scene. Avoid running the Homework 3 scene generator afterward: it can overwrite upgraded scenes.
-2. Run `Homework 4 > Export WebGL (all 5 scenes)` and confirm a successful build in the Console.
-3. Zip the **contents of** `Builds/WebGL`, not the parent folder. The ZIP root must contain `index.html` and the rest of the generated build files.
-4. Upload the ZIP on itch.io as an HTML/browser game, then test both game modes in an ordinary browser.
+2. Run **`Homework 4 > Export WebGL (6 scenes incl. Echo Shift)`** and confirm the build succeeds in the Console.
+3. Zip the **contents of** `Builds/WebGL_Homework4_AllGames`, not the parent folder. The ZIP root must contain `index.html` and the rest of the generated build files.
+4. Upload the ZIP on itch.io as an HTML/browser game, then test **all three menu options** in an ordinary browser.
 5. Commit the full Unity source project to GitHub (`Assets`, `Packages`, `ProjectSettings`, and this README). Do not commit generated `Library`, `Temp`, `Obj` or `Builds` directories.
 
 **itch.io playable version:** add/update the Homework 4 playable link here after publishing.
@@ -204,3 +215,70 @@ Still verify separately before submission: time-limit loss, pit loss, victory re
 ## Repository preparation
 
 Place this file at the repository root as `README.md` so GitHub renders the Mermaid diagrams automatically. If a root README already exists, merge any required course/repository links instead of losing them. Use a Unity-appropriate `.gitignore`.
+
+
+---
+
+## Echo Shift – second original game core loop
+
+**Original idea:** A 2D puzzle-platformer where the player cooperates with recordings of their own previous ten-second movements. Unlike the 3D Physics Bonus, Echo Shift is a separate game concept with an independent win/lose loop.
+
+**Gameplay:** Move left/right, jump, and stand on a pressure plate. At the end of each 10-second cycle, the player resets to the start and a transparent ghost replays the recorded motion. Up to three ghosts can coexist; new recordings replace the oldest after the capacity is reached. To win, use successive recordings to keep switches A and B held simultaneously, opening the gate so the active player can reach the exit. Running out of allotted cycles or falling from the map causes a loss, with a retry option.
+
+**Controls:** A/D or arrows = move, Space/W = jump, R = restart, ESC = main menu.
+
+**Architecture:** `EchoPlayer` owns Rigidbody2D motion; `EchoLoopManager` records/plays fixed-step snapshots and handles win/loss; `EchoGhost` only replays a visual position; `EchoPressurePlate` detects occupancy by active player or ghosts and raises `PressedChanged`; `EchoDoor` subscribes to those events; `EchoExit` allows only the active player to finish.
+
+```mermaid
+classDiagram
+    class EchoPlayer {
+      +Position
+      +ResetAt(Vector2)
+    }
+    class EchoLoopManager {
+      +Ghosts
+      +Win()
+      +IsRunning
+    }
+    class EchoGhost {
+      +SetFrame(int)
+    }
+    class EchoPressurePlate {
+      +IsPressed
+      +PressedChanged(bool)
+    }
+    class EchoDoor {
+      +IsOpen
+      +Refresh()
+    }
+    class EchoExit {
+      +OnTriggerEnter2D(Collider2D)
+    }
+    EchoLoopManager --> EchoPlayer : records and resets
+    EchoLoopManager --> EchoGhost : creates and replays
+    EchoPressurePlate --> EchoLoopManager : reads active positions
+    EchoDoor --> EchoPressurePlate : listens for changes
+    EchoExit --> EchoDoor : checks open state
+    EchoExit --> EchoLoopManager : requests victory
+```
+
+**Design decision:** Replays are visual and do not physically block the player; pressure plates deliberately interpret ghost positions as occupancy. This avoids unstable feedback from replaying dynamic Rigidbody2D forces and preserves repeatability across loops. Movement snapshots are sampled at Unity's fixed physics interval, so the same echo path repeats independently of rendered frame rate. The manager and components are deliberately smaller scripts with single responsibilities.
+
+**Small change example:** To add a third pressure plate, add another `EchoPressurePlate` object, assign it to an expanded `EchoDoor` or a dedicated door-requirements component, and leave the recording/ghost system unchanged. Configurable values such as `loopSeconds`, `maxEchoes` and `maxLoops` are exposed in the Inspector on `EchoLoopManager`.
+
+**Manual verification:** Developer testing in the Unity Game tab confirmed that Echo Shift opens, echoes replay every ten seconds, two pressure plates unlock the door, the active player wins, and the Console has no red errors. Still test the max-three-echo replacement, eight-loop loss, restart, navigation and the 6-scene WebGL build in a browser.
+
+
+## Submission checklist
+
+- [ ] `Assets/Scenes/EchoShift.unity` and its `.meta` are in the GitHub repository
+- [ ] All seven `Assets/Scripts/EchoShift/*.cs` scripts and both new editor scripts are committed
+- [ ] `README.md` is updated with both original game concepts and UML diagrams
+- [ ] Echo Shift: max three ghosts, eight-loop loss, restart and navigation checked
+- [ ] Shadow Switch: loss/win edge cases and swinging orb checked
+- [ ] Six-scene WebGL build succeeds
+- [ ] Itch.io page launches all three menu choices; add that page link here
+- [ ] Required peer review / Pull Request addressed or course exception confirmed
+
+**GitHub:** https://github.com/pojectgame12/HomeWork4  
+**itch.io:** _Add playable link after publishing_
