@@ -25,7 +25,7 @@ The project contains **two distinct original game loops**: Shadow Switch and Ech
 
 **Echo Shift controls:** A/D or arrows = move; Space/W = jump; R = restart; Escape = main menu.
 
-The finished project contains six scenes: `MainMenu`, `Level02`, `Victory`, `GameOver`, `PhysicsBonus3D`, and `EchoShift`. Make sure all six scenes have been committed to GitHub.
+The finished project contains six scenes: `MainMenu`, `Level02`, `Victory`, `GameOver`, `PhysicsBonus3D`, and `EchoShift`. All six scenes have been committed to GitHub (verified 21 November 2026).
 
 ## Core game loop and win/loss conditions
 
@@ -200,7 +200,7 @@ The following were confirmed during manual Unity Editor testing, as reported by 
 - Echo Shift: opens, ten-second echo replay works, two switches open the gate, and the win screen appears.
 - Unity Console: no red errors observed during those checks.
 
-Still verify separately before submission: Echo Shift loss after eight unfinished loops, max-three-echo replacement, R restart, Escape navigation; Shadow Switch time-limit loss, pit loss, victory requiring a crystal, lamp energy exhaustion, swinging orb collection; WebGL build and browser gameplay.
+Verified from the student's Unity tests: Echo Shift loss after eight unfinished loops, max-three-echo replacement, R restart and Escape navigation. The six-scene WebGL build succeeded, and the student reported successful browser play on itch.io. Still verify separately: Shadow Switch time-limit loss, pit loss, victory requiring a crystal, lamp energy exhaustion and swinging orb collection.
 
 ## Export and publish
 
@@ -210,7 +210,7 @@ Still verify separately before submission: Echo Shift loss after eight unfinishe
 4. Upload the ZIP on itch.io as an HTML/browser game, then test **all three menu options** in an ordinary browser.
 5. Commit the full Unity source project to GitHub (`Assets`, `Packages`, `ProjectSettings`, and this README). Do not commit generated `Library`, `Temp`, `Obj` or `Builds` directories.
 
-**itch.io playable version:** add/update the Homework 4 playable link here after publishing.
+**itch.io playable version:** https://projectgame12.itch.io/homework-4-shadow-switch-echo-shift
 
 ## Repository preparation
 
@@ -266,19 +266,19 @@ classDiagram
 
 **Small change example:** To add a third pressure plate, add another `EchoPressurePlate` object, assign it to an expanded `EchoDoor` or a dedicated door-requirements component, and leave the recording/ghost system unchanged. Configurable values such as `loopSeconds`, `maxEchoes` and `maxLoops` are exposed in the Inspector on `EchoLoopManager`.
 
-**Manual verification:** Developer testing in the Unity Game tab confirmed that Echo Shift opens, echoes replay every ten seconds, two pressure plates unlock the door, the active player wins, and the Console has no red errors. Still test the max-three-echo replacement, eight-loop loss, restart, navigation and the 6-scene WebGL build in a browser.
+**Manual verification:** Student testing in the Unity Game tab confirmed Echo Shift opens, echoes replay every ten seconds, two pressure plates unlock the door, the active player wins, three-echo replacement works, eight-loop loss works, R restart works, Escape returns to menu, and the Console has no red errors. The six-scene WebGL build succeeded; the student also reported that the published itch.io game runs correctly in the browser.
 
 
 ## Submission checklist
 
-- [ ] `Assets/Scenes/EchoShift.unity` and its `.meta` are in the GitHub repository
-- [ ] All seven `Assets/Scripts/EchoShift/*.cs` scripts and both new editor scripts are committed
-- [ ] `README.md` is updated with both original game concepts and UML diagrams
-- [ ] Echo Shift: max three ghosts, eight-loop loss, restart and navigation checked
+- [x] `Assets/Scenes/EchoShift.unity` and its `.meta` are in the GitHub repository
+- [x] All seven `Assets/Scripts/EchoShift/*.cs` scripts and both new editor scripts are committed
+- [x] `README.md` documents both original game concepts and UML diagrams
+- [x] Echo Shift: max three ghosts, eight-loop loss, restart and navigation checked (student-reported)
 - [ ] Shadow Switch: loss/win edge cases and swinging orb checked
-- [ ] Six-scene WebGL build succeeds
-- [ ] Itch.io page launches all three menu choices; add that page link here
+- [x] Six-scene WebGL build succeeded (Unity Console, student screenshot)
+- [x] The student reported that all three menu choices launch on itch.io; link included below
 - [ ] Required peer review / Pull Request addressed or course exception confirmed
 
 **GitHub:** https://github.com/pojectgame12/HomeWork4  
-**itch.io:** _Add playable link after publishing_
+**itch.io:** https://projectgame12.itch.io/homework-4-shadow-switch-echo-shift
