@@ -20,5 +20,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/PhysicsBonus3D.unity
     guid: 1bf2d8e0740957b41a50fb2a54d37553
+  - enabled: 1
+    path: Assets/Scenes/EchoShift.unity
+    guid: c1626bcec17a88146a5516a0c86526c9
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
