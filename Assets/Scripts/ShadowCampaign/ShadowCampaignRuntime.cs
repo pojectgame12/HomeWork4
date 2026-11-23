@@ -4,6 +4,12 @@ using UnityEngine;
 [DefaultExecutionOrder(-10000)]
 public sealed class ShadowCampaignRuntime : MonoBehaviour
 {
+    private const float BridgeFeedbackSeconds = 2.1f;
+    private const float LoreDisplaySeconds = 8f;
+    private const float TimeExpiredToleranceSeconds = 0.2f;
+    private const float EmptyLampTolerance = 0.1f;
+    private const float MinimumPreviewScale = 0.55f;
+
     public int stage = 1;
     public static ShadowCampaignRuntime Current { get; private set; }
     public bool UsedHint { get; private set; }
@@ -32,7 +38,7 @@ public sealed class ShadowCampaignRuntime : MonoBehaviour
         runtimeSettings = Instantiate(level.Settings);
         runtimeSettings.name = "ShadowCampaign_RuntimeSettings";
         ApplyDifficulty(runtimeSettings, ShadowCampaignProgress.SelectedDifficulty);
-        runtimeSettings.requiredCrystals = stage >= 2 ? 2 : 1;
+        runtimeSettings.requiredCrystals = stage >= ShadowGameTuning.ArchiveStage ? ShadowGameTuning.LaterRequiredCrystals : ShadowGameTuning.InitialRequiredCrystals;
         ShadowLiveOps.ApplyAtLevelStart(runtimeSettings);
         level.Configure(runtimeSettings);
         GameSession.Instance.Configure(runtimeSettings);
@@ -43,11 +49,11 @@ public sealed class ShadowCampaignRuntime : MonoBehaviour
         switch (difficulty)
         {
             case ShadowCampaignProgress.Difficulty.Apprentice:
-                s.startingEnergy = 80f; s.drainPerSecond = 8f; s.timeLimitSeconds = 120f; break;
+                s.startingEnergy = ShadowGameTuning.ApprenticeStartingEnergy; s.drainPerSecond = ShadowGameTuning.ApprenticeDrainPerSecond; s.timeLimitSeconds = ShadowGameTuning.ApprenticeTimeLimit; break;
             case ShadowCampaignProgress.Difficulty.Keeper:
-                s.startingEnergy = 45f; s.drainPerSecond = 16f; s.timeLimitSeconds = 75f; break;
+                s.startingEnergy = ShadowGameTuning.KeeperStartingEnergy; s.drainPerSecond = ShadowGameTuning.KeeperDrainPerSecond; s.timeLimitSeconds = ShadowGameTuning.KeeperTimeLimit; break;
             default:
-                s.startingEnergy = 60f; s.drainPerSecond = 12f; s.timeLimitSeconds = 90f; break;
+                s.startingEnergy = ShadowGameTuning.BaseStartingEnergy; s.drainPerSecond = ShadowGameTuning.BaseDrainPerSecond; s.timeLimitSeconds = ShadowGameTuning.BaseTimeLimit; break;
         }
     }
 
@@ -75,30 +81,30 @@ public sealed class ShadowCampaignRuntime : MonoBehaviour
     private void BridgeChanged(bool solid)
     {
         bridgeText = solid ? "SHADOW BRIDGE ACTIVE - CROSS NOW" : "Shadow bridge inactive";
-        bridgeFeedbackUntil = Time.unscaledTime + 2.1f;
+        bridgeFeedbackUntil = Time.unscaledTime + BridgeFeedbackSeconds;
     }
 
     public void ShowLore(string speaker, string message)
     {
         loreText = speaker + ": " + message;
-        loreUntil = Time.unscaledTime + 8f;
+        loreUntil = Time.unscaledTime + LoreDisplaySeconds;
     }
 
     public void ShowHint()
     {
         UsedHint = true;
         string hint;
-        if (stage == 1) hint = "MAYA: Stand near the lamp, press E, and aim at the obelisk with J/L or mouse.";
-        else if (stage == 2) hint = "MAYA: Collect the first crystal BEFORE the bridge. The second is across it.";
+        if (stage == ShadowGameTuning.FirstStage) hint = "MAYA: Stand near the lamp, press E, and aim at the obelisk with J/L or mouse.";
+        else if (stage == ShadowGameTuning.ArchiveStage) hint = "MAYA: Collect the first crystal BEFORE the bridge. The second is across it.";
         else hint = "MAYA: Observe the red patrol. Cross the bridge after it passes; conserve light.";
         ShowLore("HINT", hint);
     }
 
     public string DiagnoseFailure()
     {
-        if (GameSession.Instance.TimeRemaining <= .2f) return "Time expired. Try moving sooner or choosing Apprentice.";
+        if (GameSession.Instance.TimeRemaining <= TimeExpiredToleranceSeconds) return "Time expired. Try moving sooner or choosing Apprentice.";
         LampController lamp = FindFirstObjectByType<LampController>();
-        if (lamp != null && lamp.Energy <= .1f) return "Light energy exhausted. Turn the lamp off when not crossing.";
+        if (lamp != null && lamp.Energy <= EmptyLampTolerance) return "Light energy exhausted. Turn the lamp off when not crossing.";
         return "You fell or touched a hazard. Watch the bridge and patrol timing.";
     }
 
@@ -121,14 +127,14 @@ public sealed class ShadowCampaignRuntime : MonoBehaviour
     private void OnGUI()
     {
         if (!enabled) return;
-        float scale = Mathf.Max(.55f, Mathf.Min(Screen.width / 1280f, Screen.height / 720f));
+        float scale = Mathf.Max(MinimumPreviewScale, Mathf.Min(Screen.width / ShadowGameTuning.ReferenceScreenWidth, Screen.height / ShadowGameTuning.ReferenceScreenHeight));
         Matrix4x4 prior = GUI.matrix;
-        GUI.matrix = Matrix4x4.TRS(new Vector3((Screen.width - 1280f * scale) / 2f,
-            (Screen.height - 720f * scale) / 2f, 0f), Quaternion.identity, new Vector3(scale, scale, 1f));
+        GUI.matrix = Matrix4x4.TRS(new Vector3((Screen.width - ShadowGameTuning.ReferenceScreenWidth * scale) / 2f,
+            (Screen.height - ShadowGameTuning.ReferenceScreenHeight * scale) / 2f, 0f), Quaternion.identity, new Vector3(scale, scale, 1f));
         GUIStyle notice = new GUIStyle(GUI.skin.box) { fontSize = 18, wordWrap = true, alignment = TextAnchor.MiddleCenter };
         GUI.Box(new Rect(920, 15, 340, 88), "STAGE " + stage + ": " + ShadowCampaignProgress.StageTitle(stage) +
             "\n" + ShadowCampaignProgress.SelectedDifficulty + (ShadowLiveOps.IsActive ? " | ECLIPSE NIGHT" : ""), notice);
-        if (ShadowCampaignProgress.Failures(stage) >= 2)
+        if (ShadowCampaignProgress.Failures(stage) >= ShadowGameTuning.HintAfterFailures)
             GUI.Box(new Rect(920, 110, 340, 45), "Stuck? Press H for a hint", notice);
         if (Time.unscaledTime < bridgeFeedbackUntil)
             GUI.Box(new Rect(410, 130, 460, 40), bridgeText, notice);
@@ -151,8 +157,8 @@ public sealed class ShadowCampaignRuntime : MonoBehaviour
     {
         switch (stage)
         {
-            case 1: return "NOOR: The valley is dark. MAYA: Stand near the lamp and make the first bridge.\nCollect one crystal and reach the door. Press H if you need help.";
-            case 2: return "MAYA: The safety archive survived beyond the broken bridge.\nCollect TWO crystals and find the archive terminal on the other side.";
+            case ShadowGameTuning.FirstStage: return "NOOR: The valley is dark. MAYA: Stand near the lamp and make the first bridge.\nCollect one crystal and reach the door. Press H if you need help.";
+            case ShadowGameTuning.ArchiveStage: return "MAYA: The safety archive survived beyond the broken bridge.\nCollect TWO crystals and find the archive terminal on the other side.";
             default: return "GREY WARDEN: Entry prohibited. A moving security sentinel now guards the bridge.\nTime your crossing, collect TWO crystals and reach the beacon core.";
         }
     }

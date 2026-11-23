@@ -15,10 +15,10 @@ public sealed class ShadowCampaignEndingUI : MonoBehaviour
 
     private void OnGUI()
     {
-        float scale = Mathf.Min(Screen.width / 1280f, Screen.height / 720f);
+        float scale = Mathf.Min(Screen.width / ShadowGameTuning.ReferenceScreenWidth, Screen.height / ShadowGameTuning.ReferenceScreenHeight);
         Matrix4x4 prior = GUI.matrix;
-        GUI.matrix = Matrix4x4.TRS(new Vector3((Screen.width - 1280f * scale) / 2f,
-            (Screen.height - 720f * scale) / 2f, 0f), Quaternion.identity, new Vector3(scale, scale, 1f));
+        GUI.matrix = Matrix4x4.TRS(new Vector3((Screen.width - ShadowGameTuning.ReferenceScreenWidth * scale) / 2f,
+            (Screen.height - ShadowGameTuning.ReferenceScreenHeight * scale) / 2f, 0f), Quaternion.identity, new Vector3(scale, scale, 1f));
         GUI.Box(new Rect(120, 55, 1040, 610), "");
         GUIStyle heading = new GUIStyle(GUI.skin.label) { fontSize = 36, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
         heading.normal.textColor = Color.cyan;
@@ -30,8 +30,8 @@ public sealed class ShadowCampaignEndingUI : MonoBehaviour
             GUI.Label(new Rect(200, 157, 880, 110), "GREY WARDEN: The last experiment almost destroyed the valley.\nMAYA: We can bring the light back, but choose carefully.", body);
             if (GUI.Button(new Rect(270, 292, 740, 53), "QUICK RESTART - Restore light, accept the risk"))
                 Choose("Quick", "Light returns at once, but the valley's beacons flicker. The repair is incomplete.");
-            bool stable = ShadowCampaignProgress.ClueFound(2) &&
-                ShadowCampaignProgress.LastResult.energy >= 25f;
+            bool stable = ShadowCampaignProgress.ClueFound(ShadowGameTuning.ArchiveStage) &&
+                ShadowCampaignProgress.LastResult.energy >= ShadowGameTuning.StableEndingEnergyThreshold;
             GUI.enabled = stable;
             if (GUI.Button(new Rect(270, 357, 740, 53), stable ?
                 "SAFE CALIBRATION - Use archive records and reserve energy" :
@@ -40,7 +40,7 @@ public sealed class ShadowCampaignEndingUI : MonoBehaviour
             GUI.enabled = true;
             if (GUI.Button(new Rect(270, 422, 740, 53), "CONTROLLED LOCKDOWN - Protect the valley for now"))
                 Choose("Lockdown", "The observatory remains dark, but no families are exposed to a second disaster.");
-            if (ShadowCampaignProgress.ClueFound(3) &&
+            if (ShadowCampaignProgress.ClueFound(ShadowGameTuning.FinalStage) &&
                 GUI.Button(new Rect(270, 487, 740, 53), "ALLY WITH GREY WARDEN - Joint rehabilitation plan"))
                 Choose("Guardian", "The Warden agrees to a safer restoration plan. An unlikely partnership is born.");
         }

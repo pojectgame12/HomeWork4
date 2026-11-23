@@ -8,10 +8,13 @@ using UnityEngine.Networking;
 [Serializable]
 public sealed class ShadowEventParameters
 {
-    public float startingEnergy = 60f;
-    public float drainPerSecond = 15f;
-    public float timeLimitSeconds = 80f;
-    public float crystalEnergyReward = 30f;
+    private const float DefaultEventDrainPerSecond = 15f;
+    private const float DefaultEventTimeLimit = 80f;
+    private const float DefaultEventCrystalReward = 30f;
+    public float startingEnergy = ShadowGameTuning.BaseStartingEnergy;
+    public float drainPerSecond = DefaultEventDrainPerSecond;
+    public float timeLimitSeconds = DefaultEventTimeLimit;
+    public float crystalEnergyReward = DefaultEventCrystalReward;
 }
 
 [Serializable]
@@ -33,6 +36,15 @@ public sealed class ShadowEventConfig
 /// </summary>
 public static class ShadowLiveOps
 {
+    private const int JsonSchemaVersion = 1;
+    private const float MinimumStartingEnergy = 1f;
+    private const float MinimumDrainRate = 0f;
+    private const float MaximumDrainRate = 35f;
+    private const float MinimumTimeLimitSeconds = 20f;
+    private const float MaximumTimeLimitSeconds = 300f;
+    private const float MinimumCrystalReward = 0f;
+    private const int RemoteRequestTimeoutSeconds = 5;
+
     // The repo path becomes valid after the file is uploaded. This URL can be changed in source if needed.
     public const string RemoteUrl =
         "https://raw.githubusercontent.com/pojectgame12/HomeWork4/main/liveops/eclipse-night.json";
@@ -70,14 +82,14 @@ public static class ShadowLiveOps
         try
         {
             ShadowEventConfig candidate = JsonUtility.FromJson<ShadowEventConfig>(json);
-            if (candidate == null || candidate.schemaVersion != 1 || candidate.eventId != "eclipse-night" ||
+            if (candidate == null || candidate.schemaVersion != JsonSchemaVersion || candidate.eventId != "eclipse-night" ||
                 candidate.parameters == null || !candidate.applyOnNextLevelStart) return false;
             DateTimeOffset start, end;
             if (!ParseUtc(candidate.startsAtUtc, out start) || !ParseUtc(candidate.endsAtUtc, out end) || end <= start) return false;
-            if (candidate.parameters.startingEnergy < 1f || candidate.parameters.startingEnergy > 100f ||
-                candidate.parameters.drainPerSecond < 0f || candidate.parameters.drainPerSecond > 35f ||
-                candidate.parameters.timeLimitSeconds < 20f || candidate.parameters.timeLimitSeconds > 300f ||
-                candidate.parameters.crystalEnergyReward < 0f || candidate.parameters.crystalEnergyReward > 100f) return false;
+            if (candidate.parameters.startingEnergy < MinimumStartingEnergy || candidate.parameters.startingEnergy > ShadowGameTuning.MaximumEnergy ||
+                candidate.parameters.drainPerSecond < MinimumDrainRate || candidate.parameters.drainPerSecond > MaximumDrainRate ||
+                candidate.parameters.timeLimitSeconds < MinimumTimeLimitSeconds || candidate.parameters.timeLimitSeconds > MaximumTimeLimitSeconds ||
+                candidate.parameters.crystalEnergyReward < MinimumCrystalReward || candidate.parameters.crystalEnergyReward > ShadowGameTuning.MaximumEnergy) return false;
             parsed = candidate;
             return true;
         }
@@ -123,7 +135,7 @@ public static class ShadowLiveOps
         string localUrl = Application.streamingAssetsPath.TrimEnd('/') + "/ShadowSwitch/eclipse-night.json";
         using (UnityWebRequest localReq = UnityWebRequest.Get(localUrl))
         {
-            localReq.timeout = 5;
+            localReq.timeout = RemoteRequestTimeoutSeconds;
             yield return localReq.SendWebRequest();
             if (localReq.result == UnityWebRequest.Result.Success)
             {
@@ -138,7 +150,7 @@ public static class ShadowLiveOps
 #endif
         using (UnityWebRequest request = UnityWebRequest.Get(RemoteUrl + "?check=" + DateTimeOffset.UtcNow.ToUnixTimeSeconds()))
         {
-            request.timeout = 5;
+            request.timeout = RemoteRequestTimeoutSeconds;
             yield return request.SendWebRequest();
             if (request.result == UnityWebRequest.Result.Success)
             {
@@ -161,9 +173,9 @@ public static class ShadowLiveOps
         EnsureFallback();
         if (!IsActive || settings == null) return;
         // Delta-based modifiers preserve the differences between difficulty profiles.
-        settings.startingEnergy = Mathf.Clamp(settings.startingEnergy + (current.parameters.startingEnergy - 60f), 1f, 100f);
-        settings.drainPerSecond = Mathf.Max(0f, settings.drainPerSecond + (current.parameters.drainPerSecond - 12f));
-        settings.timeLimitSeconds = Mathf.Max(20f, settings.timeLimitSeconds + (current.parameters.timeLimitSeconds - 90f));
-        settings.crystalEnergyReward = Mathf.Clamp(settings.crystalEnergyReward + (current.parameters.crystalEnergyReward - 25f), 0f, 100f);
+        settings.startingEnergy = Mathf.Clamp(settings.startingEnergy + (current.parameters.startingEnergy - ShadowGameTuning.BaseStartingEnergy), MinimumStartingEnergy, ShadowGameTuning.MaximumEnergy);
+        settings.drainPerSecond = Mathf.Max(0f, settings.drainPerSecond + (current.parameters.drainPerSecond - ShadowGameTuning.BaseDrainPerSecond));
+        settings.timeLimitSeconds = Mathf.Max(MinimumTimeLimitSeconds, settings.timeLimitSeconds + (current.parameters.timeLimitSeconds - ShadowGameTuning.BaseTimeLimit));
+        settings.crystalEnergyReward = Mathf.Clamp(settings.crystalEnergyReward + (current.parameters.crystalEnergyReward - ShadowGameTuning.BaseCrystalEnergyReward), MinimumCrystalReward, ShadowGameTuning.MaximumEnergy);
     }
 }

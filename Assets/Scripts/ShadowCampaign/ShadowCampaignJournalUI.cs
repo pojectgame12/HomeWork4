@@ -5,10 +5,10 @@ public sealed class ShadowCampaignJournalUI : MonoBehaviour
 {
     private void OnGUI()
     {
-        float scale = Mathf.Min(Screen.width / 1280f, Screen.height / 720f);
+        float scale = Mathf.Min(Screen.width / ShadowGameTuning.ReferenceScreenWidth, Screen.height / ShadowGameTuning.ReferenceScreenHeight);
         Matrix4x4 prior = GUI.matrix;
-        GUI.matrix = Matrix4x4.TRS(new Vector3((Screen.width - 1280f * scale) / 2f,
-            (Screen.height - 720f * scale) / 2f, 0f), Quaternion.identity, new Vector3(scale, scale, 1f));
+        GUI.matrix = Matrix4x4.TRS(new Vector3((Screen.width - ShadowGameTuning.ReferenceScreenWidth * scale) / 2f,
+            (Screen.height - ShadowGameTuning.ReferenceScreenHeight * scale) / 2f, 0f), Quaternion.identity, new Vector3(scale, scale, 1f));
         GUI.Box(new Rect(110, 40, 1060, 635), "");
         GUIStyle head = new GUIStyle(GUI.skin.label) { fontSize = 38, alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
         head.normal.textColor = Color.cyan;
@@ -18,9 +18,9 @@ public sealed class ShadowCampaignJournalUI : MonoBehaviour
         GUI.Label(new Rect(165, 137, 950, 380),
             "WORLD: The Great Eclipse disabled the valley's beacons. Light crystals power the old transit network. " +
             "Engineers argued about unsafe experiments, leaving the Grey Warden to protect the sealed core.\n\n" +
-            Entry(1, "FIRST LAW", "An obelisk can solidify a shadow bridge while correctly illuminated.") + "\n\n" +
-            Entry(2, "SAFETY ARCHIVE", "Without calibration, an immediate restart can overload the valley.") + "\n\n" +
-            Entry(3, "WARDEN RECORD", "The Warden is a safety system, not a malicious ruler.") + "\n\n" +
+            Entry(ShadowGameTuning.FirstStage, "FIRST LAW", "An obelisk can solidify a shadow bridge while correctly illuminated.") + "\n\n" +
+            Entry(ShadowGameTuning.ArchiveStage, "SAFETY ARCHIVE", "Without calibration, an immediate restart can overload the valley.") + "\n\n" +
+            Entry(ShadowGameTuning.FinalStage, "WARDEN RECORD", "The Warden is a safety system, not a malicious ruler.") + "\n\n" +
             "ACHIEVEMENTS: " +
             Badge("FirstLight", "First Light") + " | " + Badge("Independent", "No Hints") +
             " | " + Badge("EnergySaver", "Energy Saver") + "\n" +

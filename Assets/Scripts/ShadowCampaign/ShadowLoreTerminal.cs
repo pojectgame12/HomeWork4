@@ -4,6 +4,8 @@ using UnityEngine;
 [RequireComponent(typeof(Collider2D))]
 public sealed class ShadowLoreTerminal : MonoBehaviour
 {
+    private const float TerminalPulseSpeed = 2f;
+
     public int stage = 1;
     private float phase;
     private SpriteRenderer visual;
@@ -13,7 +15,7 @@ public sealed class ShadowLoreTerminal : MonoBehaviour
 
     private void Update()
     {
-        phase += Time.deltaTime * 2f;
+        phase += Time.deltaTime * TerminalPulseSpeed;
         if (visual != null) visual.color = Color.Lerp(new Color(.15f, .70f, .9f),
             Color.white, .5f + .5f * Mathf.Sin(phase));
     }
@@ -25,7 +27,7 @@ public sealed class ShadowLoreTerminal : MonoBehaviour
         ShadowCampaignProgress.AddClue(stage);
         if (ShadowCampaignRuntime.Current != null)
             ShadowCampaignRuntime.Current.ShowLore("ARCHIVE", Lore());
-        GameEvents.RaiseStatusMessage("Lore entry " + stage + "/3 recovered!");
+        GameEvents.RaiseStatusMessage("Lore entry " + stage + "/" + ShadowCampaignProgress.MaxStage + " recovered!");
         if (visual != null) visual.enabled = false;
         Collider2D col = GetComponent<Collider2D>();
         if (col != null) col.enabled = false;

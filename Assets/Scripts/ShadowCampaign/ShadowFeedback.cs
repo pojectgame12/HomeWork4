@@ -4,6 +4,14 @@ using UnityEngine;
 [RequireComponent(typeof(AudioSource))]
 public sealed class ShadowFeedback : MonoBehaviour
 {
+    private const float EffectsVolume = 0.28f;
+    private const float BridgeSoundFrequencyHz = 550f;
+    private const float BridgeSoundDurationSeconds = 0.16f;
+    private const float CrystalSoundFrequencyHz = 820f;
+    private const float CrystalSoundDurationSeconds = 0.14f;
+    private const float ToneAmplitude = 0.34f;
+    private const int ToneSampleRateHz = 22050;
+
     private AudioSource source;
     private AudioClip bridgeOn;
     private AudioClip pickup;
@@ -13,9 +21,9 @@ public sealed class ShadowFeedback : MonoBehaviour
     {
         source = GetComponent<AudioSource>();
         source.playOnAwake = false;
-        source.volume = .28f;
-        bridgeOn = Tone("ShadowBridgeActivation", 550f, .16f);
-        pickup = Tone("ShadowCrystalPickup", 820f, .14f);
+        source.volume = EffectsVolume;
+        bridgeOn = Tone("ShadowBridgeActivation", BridgeSoundFrequencyHz, BridgeSoundDurationSeconds);
+        pickup = Tone("ShadowCrystalPickup", CrystalSoundFrequencyHz, CrystalSoundDurationSeconds);
     }
 
     private void Start()
@@ -41,13 +49,13 @@ public sealed class ShadowFeedback : MonoBehaviour
 
     private static AudioClip Tone(string name, float hz, float seconds)
     {
-        const int rate = 22050;
+        int rate = ToneSampleRateHz;
         int count = Mathf.RoundToInt(rate * seconds);
         float[] samples = new float[count];
         for (int i = 0; i < count; i++)
         {
             float fade = 1f - (float)i / count;
-            samples[i] = Mathf.Sin(2f * Mathf.PI * hz * i / rate) * fade * .34f;
+            samples[i] = Mathf.Sin(2f * Mathf.PI * hz * i / rate) * fade * ToneAmplitude;
         }
         AudioClip clip = AudioClip.Create(name, count, 1, rate, false);
         clip.SetData(samples, 0);

@@ -4,6 +4,10 @@ using UnityEngine.SceneManagement;
 /// <summary>Entry point for the three-stage story campaign, progression and event refresh.</summary>
 public sealed class ShadowCampaignHubUI : MonoBehaviour
 {
+    private const int FirstStageRowY = 290;
+    private const int StageRowHeight = 86;
+    private const int StageStatsOffsetY = 33;
+
     private bool checkingEvent;
     private Vector2 scroll;
 
@@ -23,10 +27,10 @@ public sealed class ShadowCampaignHubUI : MonoBehaviour
 
     private void OnGUI()
     {
-        float scale = Mathf.Min(Screen.width / 1280f, Screen.height / 720f);
+        float scale = Mathf.Min(Screen.width / ShadowGameTuning.ReferenceScreenWidth, Screen.height / ShadowGameTuning.ReferenceScreenHeight);
         Matrix4x4 old = GUI.matrix;
-        GUI.matrix = Matrix4x4.TRS(new Vector3((Screen.width - 1280f * scale) / 2f,
-            (Screen.height - 720f * scale) / 2f, 0f), Quaternion.identity, new Vector3(scale, scale, 1f));
+        GUI.matrix = Matrix4x4.TRS(new Vector3((Screen.width - ShadowGameTuning.ReferenceScreenWidth * scale) / 2f,
+            (Screen.height - ShadowGameTuning.ReferenceScreenHeight * scale) / 2f, 0f), Quaternion.identity, new Vector3(scale, scale, 1f));
         GUI.Box(new Rect(85, 40, 1110, 640), "");
         GUIStyle title = new GUIStyle(GUI.skin.label) { fontSize = 39, alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
         title.normal.textColor = new Color(.40f, 1f, .88f);
@@ -41,16 +45,16 @@ public sealed class ShadowCampaignHubUI : MonoBehaviour
         DrawDifficulty(new Rect(500, 210, 280, 48), ShadowCampaignProgress.Difficulty.Explorer);
         DrawDifficulty(new Rect(812, 210, 280, 48), ShadowCampaignProgress.Difficulty.Keeper);
 
-        for (int stage = 1; stage <= 3; stage++)
+        for (int stage = ShadowGameTuning.FirstStage; stage <= ShadowGameTuning.FinalStage; stage++)
         {
-            int top = 290 + (stage - 1) * 86;
+            int top = FirstStageRowY + (stage - ShadowGameTuning.FirstStage) * StageRowHeight;
             bool unlocked = ShadowCampaignProgress.IsUnlocked(stage);
             int n = stage;
             string details = "Best: " + (ShadowCampaignProgress.BestTime(stage) >= 0f ?
                 ShadowCampaignProgress.BestTime(stage).ToString("0.0") + "s" : "--") +
                 "   Medal: " + Medal(ShadowCampaignProgress.BestMedal(stage));
             GUI.Label(new Rect(155, top, 720, 35), "STAGE " + stage + " - " + ShadowCampaignProgress.StageTitle(stage), caption);
-            GUI.Label(new Rect(160, top + 33, 600, 32), details, caption);
+            GUI.Label(new Rect(160, top + StageStatsOffsetY, 600, 32), details, caption);
             GUI.enabled = unlocked;
             if (GUI.Button(new Rect(885, top + 3, 225, 55), unlocked ? "PLAY STAGE " + stage : "LOCKED"))
                 ShadowCampaignProgress.StartStage(n);
@@ -77,5 +81,5 @@ public sealed class ShadowCampaignHubUI : MonoBehaviour
         GUI.backgroundColor = old;
     }
 
-    private static string Medal(int n) { return n == 3 ? "GOLD" : n == 2 ? "SILVER" : n == 1 ? "BRONZE" : "NONE"; }
+    private static string Medal(int n) { return n == ShadowGameTuning.GoldMedal ? "GOLD" : n == ShadowGameTuning.SilverMedal ? "SILVER" : n == ShadowGameTuning.BronzeMedal ? "BRONZE" : "NONE"; }
 }
