@@ -23,8 +23,8 @@ public sealed class GameSession : MonoBehaviour
     public float remainingEnergy { get; private set; }
     public float elapsedSeconds { get; private set; }
     public bool completed { get; private set; }
-    public int RequiredCrystals => settings != null ? settings.requiredCrystals : 1;
-    public float TimeLimit => settings != null ? settings.timeLimitSeconds : 90f;
+    public int RequiredCrystals => settings != null ? settings.requiredCrystals : ShadowGameTuning.InitialRequiredCrystals;
+    public float TimeLimit => settings != null ? settings.timeLimitSeconds : ShadowGameTuning.BaseTimeLimit;
     public float TimeRemaining => Mathf.Max(0f, TimeLimit - (Time.time - levelStartTime));
     public bool IsTransitioning => transitioning;
 
@@ -61,7 +61,7 @@ public sealed class GameSession : MonoBehaviour
     {
         totalAttempts++;
         crystalsCollected = 0;
-        remainingEnergy = settings != null ? settings.startingEnergy : 60f;
+        remainingEnergy = settings != null ? settings.startingEnergy : ShadowGameTuning.BaseStartingEnergy;
         elapsedSeconds = 0f;
         completed = false;
         transitioning = false;

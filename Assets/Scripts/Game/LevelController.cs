@@ -4,6 +4,8 @@ using UnityEngine.SceneManagement;
 /// <summary>Level lifetime, time limit, and lightweight HUD. Campaign-aware, classic-compatible.</summary>
 public sealed class LevelController : MonoBehaviour
 {
+    private const float StatusMessageDisplaySeconds = 2.5f;
+
     [SerializeField] private LevelSettings settings;
     public LevelSettings Settings => settings;
     public void Configure(LevelSettings value) { settings = value; }
@@ -31,7 +33,7 @@ public sealed class LevelController : MonoBehaviour
     private void ShowStatus(string message)
     {
         status = message;
-        statusUntil = Time.time + 2.5f;
+        statusUntil = Time.time + StatusMessageDisplaySeconds;
     }
 
     private void OnGUI()
