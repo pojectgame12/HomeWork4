@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "eventId": "eclipse-night",
   "title": "Eclipse Night REMOTE TEST v1",
-  "enabled": true,
+  "enabled": false,
   "startsAtUtc": "2026-11-01T00:00:00Z",
   "endsAtUtc": "2026-12-31T23:59:59Z",
   "parameters": {
