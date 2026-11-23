@@ -36,3 +36,9 @@ The event **Eclipse Night** is configured at `liveops/eclipse-night.json` and re
 ## Important distinction
 
 Twee/Twine storytelling extends the same fictional world but is a **separate narrative prototype**; its variables do not directly control Unity. The game contains its own, smaller set of ending branches. The local fallback can retain an enabled event even if the remote request fails, so inspect the displayed Live Ops source while testing.
+
+## Homework 5 – Interactive Twine Story
+
+[Play the interactive Twine story](https://pojectgame12.github.io/HomeWork4/story/ShadowSwitch_Twine_Published.html)
+
+[Play Shadow Switch on itch.io](https://projectgame12.itch.io/homework5)
