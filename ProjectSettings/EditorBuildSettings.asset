@@ -23,5 +23,26 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/EchoShift.unity
     guid: c1626bcec17a88146a5516a0c86526c9
+  - enabled: 1
+    path: Assets/Scenes/ShadowCampaignHub.unity
+    guid: 7c8193b5cce65504c9888c813e78e83f
+  - enabled: 1
+    path: Assets/Scenes/ShadowStage1.unity
+    guid: c2d78b1e22d8581469478829f681290e
+  - enabled: 1
+    path: Assets/Scenes/ShadowStage2.unity
+    guid: ea756721eb05da941825dc6d8a6aef9e
+  - enabled: 1
+    path: Assets/Scenes/ShadowStage3.unity
+    guid: 1497a8cab6b5cdd489dc0b3c8aeb1645
+  - enabled: 1
+    path: Assets/Scenes/ShadowCampaignResult.unity
+    guid: 6c35779ea70d5484893208ced860cf82
+  - enabled: 1
+    path: Assets/Scenes/ShadowCampaignJournal.unity
+    guid: 1f1f3a3d06d33fc4d986fdcbaae920f0
+  - enabled: 1
+    path: Assets/Scenes/ShadowCampaignEnding.unity
+    guid: fa4df4f4aeac33248b640119ec00cf0b
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
