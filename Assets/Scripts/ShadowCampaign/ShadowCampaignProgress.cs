@@ -109,11 +109,18 @@ public static class ShadowCampaignProgress
         float energy = Mathf.Max(0f, session.remainingEnergy);
         int medal = won ? (hintUsed ? 1 : energy >= 35f ? 3 : 2) : 0;
         LastResult = new Result
-        {
-            exists = true, won = won, stage = stage, medal = medal,
-            seconds = elapsed, energy = energy, crystals = session.crystalsCollected,
-            usedHint = hintUsed, reason = reason
-        };
+       LastResult = new Result
+       {
+            exists = true,
+    won = won,
+    stage = stage,
+    medal = medal,
+    seconds = elapsed,
+    energy = energy,
+    crystals = session.crystalsCollected,
+    usedHint = hintUsed,
+    reason = reason
+};
         if (!won)
             PlayerPrefs.SetInt(Prefix + "failures." + stage, Failures(stage) + 1);
         else
