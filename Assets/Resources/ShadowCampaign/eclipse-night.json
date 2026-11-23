@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "eventId": "eclipse-night",
+  "title": "Eclipse Night - ליל הליקוי",
+  "enabled": false,
+  "startsAtUtc": "2026-11-24T00:00:00Z",
+  "endsAtUtc": "2026-12-08T23:59:59Z",
+  "parameters": {
+    "startingEnergy": 60,
+    "drainPerSecond": 15,
+    "timeLimitSeconds": 80,
+    "crystalEnergyReward": 30
+  },
+  "applyOnNextLevelStart": true
+}
