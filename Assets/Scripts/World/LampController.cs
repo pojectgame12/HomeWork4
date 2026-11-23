@@ -5,6 +5,19 @@ using UnityEngine.EventSystems;
 /// <summary>Controls beam and publishes bridge state; listens to crystal pickup events.</summary>
 public sealed class LampController : MonoBehaviour
 {
+    private const float AimRotationSpeedDegreesPerSecond = 90f;
+    private const float MinimumAimDegrees = -75f;
+    private const float MaximumAimDegrees = 75f;
+    private const float MouseAimMinimumDistanceSquared = 0.1f;
+    private const float BeamLengthWorldUnits = 5f;
+    private const float BeamOffsetX = 0.15f;
+    private const float BeamOffsetY = 0.18f;
+    private const float BeamStartWidth = 0.12f;
+    private const float BeamEndWidth = 0.27f;
+    private const float BeamTailAlpha = 0.05f;
+    private const int BeamSortingOrder = 7;
+    private const int BeamVertexCount = 2;
+
     public static LampController Instance { get; private set; }
     public Transform designatedObelisk;
     public float energy = 60f;
@@ -38,11 +51,11 @@ public sealed class LampController : MonoBehaviour
         if (beam == null) beam = gameObject.AddComponent<LineRenderer>();
         Shader shader = Shader.Find("Sprites/Default");
         if (shader != null) beam.material = new Material(shader);
-        beam.startWidth = 0.12f;
-        beam.endWidth = 0.27f;
-        beam.positionCount = 2;
+        beam.startWidth = BeamStartWidth;
+        beam.endWidth = BeamEndWidth;
+        beam.positionCount = BeamVertexCount;
         beam.useWorldSpace = true;
-        beam.sortingOrder = 7;
+        beam.sortingOrder = BeamSortingOrder;
     }
 
     private void OnEnable() { GameEvents.CrystalCollected += Recharge; }
@@ -75,15 +88,15 @@ public sealed class LampController : MonoBehaviour
             float turn = 0f;
             if (Input.GetKey(KeyCode.J) || MobileInputState.rotateLeft) turn -= 1f;
             if (Input.GetKey(KeyCode.L) || MobileInputState.rotateRight) turn += 1f;
-            aimDegrees = Mathf.Clamp(aimDegrees + turn * 90f * Time.deltaTime, -75f, 75f);
+            aimDegrees = Mathf.Clamp(aimDegrees + turn * AimRotationSpeedDegreesPerSecond * Time.deltaTime, MinimumAimDegrees, MaximumAimDegrees);
 
             bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
             if (Input.GetMouseButtonDown(0) && Input.touchCount == 0 && !overUI && Camera.main != null)
             {
                 Vector3 mouse = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                 Vector2 delta = mouse - transform.position;
-                if (delta.sqrMagnitude > 0.1f)
-                    aimDegrees = Mathf.Clamp(Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg, -75f, 75f);
+                if (delta.sqrMagnitude > MouseAimMinimumDistanceSquared)
+                    aimDegrees = Mathf.Clamp(Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg, MinimumAimDegrees, MaximumAimDegrees);
             }
         }
 
@@ -96,11 +109,11 @@ public sealed class LampController : MonoBehaviour
 
         Vector2 direction = new Vector2(Mathf.Cos(aimDegrees * Mathf.Deg2Rad), Mathf.Sin(aimDegrees * Mathf.Deg2Rad));
         beam.enabled = isLit;
-        beam.SetPosition(0, transform.position + new Vector3(0.15f, 0.18f, 0f));
-        beam.SetPosition(1, transform.position + (Vector3)(direction * 5f));
+        beam.SetPosition(0, transform.position + new Vector3(BeamOffsetX, BeamOffsetY, 0f));
+        beam.SetPosition(1, transform.position + (Vector3)(direction * BeamLengthWorldUnits));
         Color glow = BridgeConditionsMet ? new Color(.2f, 1f, .8f, .85f) : new Color(1f, .8f, .3f, .8f);
         beam.startColor = glow;
-        beam.endColor = new Color(glow.r, glow.g, glow.b, .05f);
+        beam.endColor = new Color(glow.r, glow.g, glow.b, BeamTailAlpha);
 
         bool current = BridgeConditionsMet;
         if (current == lastBridgeState) return;
@@ -111,7 +124,7 @@ public sealed class LampController : MonoBehaviour
     public void Recharge(float amount)
     {
         if (amount <= 0f) return;
-        energy = Mathf.Clamp(energy + amount, 0f, 100f);
+        energy = Mathf.Clamp(energy + amount, 0f, ShadowGameTuning.MaximumEnergy);
         GameEvents.RaiseLampEnergyChanged(energy);
     }
 
