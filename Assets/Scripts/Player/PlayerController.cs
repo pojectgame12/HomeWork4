@@ -4,6 +4,12 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D), typeof(BoxCollider2D))]
 public sealed class PlayerController : MonoBehaviour
 {
+    private const float DeathBelowWorldY = -8f;
+    private const float GroundProbeVerticalInset = 0.06f;
+    private const float GroundProbeHorizontalSpreadFactor = 0.63f;
+    private const float GroundProbeLength = 0.20f;
+    private const float MinimumWalkableNormalY = 0.35f;
+
     // Preserve the original serialized field names and prefab settings.
     public float moveSpeed = 5.3f;
     public float jumpSpeed = 9.8f;
@@ -38,7 +44,7 @@ public sealed class PlayerController : MonoBehaviour
         jumpPressed |= MobileInputState.ConsumeJump();
         if (jumpPressed && IsGrounded()) jumpQueued = true;
 
-        if (!deathSent && transform.position.y < -8f)
+        if (!deathSent && transform.position.y < DeathBelowWorldY)
         {
             deathSent = true;
             GameEvents.RaisePlayerDied();
@@ -67,16 +73,16 @@ public sealed class PlayerController : MonoBehaviour
     private bool IsGrounded()
     {
         Bounds b = hitbox.bounds;
-        float y = b.min.y + 0.06f;
-        float halfWidth = b.extents.x * 0.63f;
+        float y = b.min.y + GroundProbeVerticalInset;
+        float halfWidth = b.extents.x * GroundProbeHorizontalSpreadFactor;
         for (int i = -1; i <= 1; i++)
         {
             Vector2 origin = new Vector2(b.center.x + halfWidth * i, y);
-            RaycastHit2D[] hits = Physics2D.RaycastAll(origin, Vector2.down, 0.20f);
+            RaycastHit2D[] hits = Physics2D.RaycastAll(origin, Vector2.down, GroundProbeLength);
             foreach (RaycastHit2D hit in hits)
             {
                 if (hit.collider == null || hit.collider == hitbox || hit.collider.isTrigger) continue;
-                if (hit.normal.y > 0.35f) return true;
+                if (hit.normal.y > MinimumWalkableNormalY) return true;
             }
         }
         return false;
@@ -87,7 +93,7 @@ public sealed class PlayerController : MonoBehaviour
         if (!airborneAfterJump) return;
         for (int i = 0; i < collision.contactCount; i++)
         {
-            if (collision.GetContact(i).normal.y < 0.35f) continue;
+            if (collision.GetContact(i).normal.y < MinimumWalkableNormalY) continue;
             airborneAfterJump = false;
             GameEvents.RaiseStatusMessage("Landed safely (Collision2D)");
             break;
