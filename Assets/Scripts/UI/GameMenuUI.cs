@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>Existing game menu plus independent Echo Shift playable core loop.</summary>
+/// <summary>Homework 4 menu retained, with an additional optional Shadow Switch story campaign.</summary>
 public sealed class GameMenuUI : MonoBehaviour
 {
     public enum MenuType { Main, Victory, GameOver }
@@ -11,34 +11,31 @@ public sealed class GameMenuUI : MonoBehaviour
     {
         float scale = Mathf.Min(Screen.width / 1280f, Screen.height / 720f);
         GUI.matrix = Matrix4x4.TRS(new Vector3((Screen.width - 1280f * scale) * .5f,
-                         (Screen.height - 720f * scale) * .5f, 0f),
-                         Quaternion.identity, new Vector3(scale, scale, 1f));
+            (Screen.height - 720f * scale) * .5f, 0f), Quaternion.identity, new Vector3(scale, scale, 1f));
         GUI.Box(new Rect(270, 105, 740, 500), "");
-        GUIStyle title = new GUIStyle(GUI.skin.label) {
-            fontSize = 52, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter
-        };
+        GUIStyle title = new GUIStyle(GUI.skin.label) { fontSize = 52, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
         title.normal.textColor = new Color(.35f, .94f, .90f);
-        GUIStyle body = new GUIStyle(GUI.skin.label) {
-            fontSize = 23, alignment = TextAnchor.MiddleCenter, wordWrap = true
-        };
+        GUIStyle body = new GUIStyle(GUI.skin.label) { fontSize = 23, alignment = TextAnchor.MiddleCenter, wordWrap = true };
         body.normal.textColor = Color.white;
-        GUIStyle button = new GUIStyle(GUI.skin.button) {
-            fontSize = 25, fontStyle = FontStyle.Bold
-        };
+        GUIStyle button = new GUIStyle(GUI.skin.button) { fontSize = 25, fontStyle = FontStyle.Bold };
         GameSession session = GameSession.Instance;
 
         if (menuType == MenuType.Main)
         {
             GUI.Label(new Rect(320, 125, 640, 76), "HOMEWORK 4", title);
-            GUI.Label(new Rect(330, 206, 620, 66), "Two game concepts, one Unity project", body);
-            if (GUI.Button(new Rect(460, 290, 360, 60), "SHADOW SWITCH", button))
+            GUI.Label(new Rect(330, 195, 620, 59), "Original games + Shadow Switch story campaign", body);
+            if (GUI.Button(new Rect(455, 259, 370, 57), "SHADOW SWITCH: STORY", button))
+                OpenIfAvailable("ShadowCampaignHub");
+            if (GUI.Button(new Rect(455, 327, 370, 57), "SHADOW SWITCH: CLASSIC", button))
+            {
+                ShadowCampaignProgress.LeaveCampaign();
                 SceneManager.LoadScene("Level02");
-            if (GUI.Button(new Rect(460, 363, 360, 60), "PHYSICS BONUS (3D)", button))
+            }
+            if (GUI.Button(new Rect(455, 395, 370, 57), "PHYSICS BONUS (3D)", button))
                 OpenIfAvailable("PhysicsBonus3D");
-            if (GUI.Button(new Rect(460, 436, 360, 60), "ECHO SHIFT", button))
+            if (GUI.Button(new Rect(455, 463, 370, 57), "ECHO SHIFT", button))
                 OpenIfAvailable("EchoShift");
-            GUI.Label(new Rect(335, 519, 610, 60),
-                "Choose a game. R restarts a level; ESC returns here.", body);
+            GUI.Label(new Rect(335, 530, 610, 55), "R: restart   |   ESC: return to menu", body);
         }
         else if (menuType == MenuType.Victory)
         {
@@ -69,7 +66,6 @@ public sealed class GameMenuUI : MonoBehaviour
     {
         if (Application.CanStreamedLevelBeLoaded(sceneName))
             SceneManager.LoadScene(sceneName);
-        else
-            Debug.LogWarning("Missing scene " + sceneName + ". Run its Homework 4 setup command.");
+        else Debug.LogWarning("Missing scene " + sceneName + ". Run Shadow Switch > Install Campaign if needed.");
     }
 }

@@ -97,7 +97,12 @@ public sealed class GameSession : MonoBehaviour
         transitioning = true;
         completed = true;
         RecordResult(energy);
-        SceneManager.LoadScene("Victory");
+        if (ShadowCampaignRuntime.Current != null)
+        {
+            ShadowCampaignRuntime.Current.RecordBeforeExit(true);
+            SceneManager.LoadScene("ShadowCampaignResult");
+        }
+        else SceneManager.LoadScene("Victory");
     }
 
     public void FailLevel(float energy)
@@ -106,7 +111,12 @@ public sealed class GameSession : MonoBehaviour
         transitioning = true;
         completed = false;
         RecordResult(energy);
-        SceneManager.LoadScene("GameOver");
+        if (ShadowCampaignRuntime.Current != null)
+        {
+            ShadowCampaignRuntime.Current.RecordBeforeExit(false);
+            SceneManager.LoadScene("ShadowCampaignResult");
+        }
+        else SceneManager.LoadScene("GameOver");
     }
 
     private void RecordResult(float energy)

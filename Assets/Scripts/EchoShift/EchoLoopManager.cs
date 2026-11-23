@@ -1,8 +1,16 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 
-/// <summary>Records one ten-second loop, replays up to three echoes, and owns results.</summary>
+/// <summary>
+/// Echo Shift loop manager + Live Ops demo.
+/// Preserves the original ten-second echo game when no live event is active.
+/// Replace only the .cs contents of the existing file, retaining its .meta GUID.
+/// </summary>
 public sealed class EchoLoopManager : MonoBehaviour
 {
     [SerializeField] private EchoPlayer activePlayer;
@@ -13,6 +21,23 @@ public sealed class EchoLoopManager : MonoBehaviour
     [SerializeField, Range(1, 3)] private int maxEchoes = 3;
     [SerializeField, Min(2)] private int maxLoops = 8;
 
+    [Header("Live Ops (optional)")]
+    [Tooltip("Optional HTTPS JSON endpoint, with CORS configured for WebGL. Empty = local StreamingAssets JSON.")]
+    [SerializeField] private string liveOpsRemoteUrl = "";
+
+    [Serializable]
+    private sealed class LiveOpsConfig
+    {
+        public string eventId;
+        public bool enabled;
+        public string startUtc;
+        public string endUtc;
+        public float loopSeconds;
+        public int maxLoops;
+        public int maxEchoes;
+        public string banner;
+    }
+
     private readonly List<EchoGhost> ghosts = new List<EchoGhost>();
     private readonly List<EchoFrame> recording = new List<EchoFrame>();
     private Vector2 startingPosition;
@@ -20,8 +45,12 @@ public sealed class EchoLoopManager : MonoBehaviour
     private int loopNumber = 1;
     private bool running;
     private bool won;
+    private bool isLoading = true;
+    private bool liveEventActive;
+    private string liveEventBanner = "";
     private string message = "";
     private float messageUntil;
+    private bool loadedFromRemote;
 
     public EchoPlayer ActivePlayer => activePlayer;
     public IReadOnlyList<EchoGhost> Ghosts => ghosts;
@@ -35,18 +64,102 @@ public sealed class EchoLoopManager : MonoBehaviour
         door = gate;
     }
 
-    private void Start()
+    // Unity permits Start to be an IEnumerator for asynchronous initialization.
+    private IEnumerator Start()
     {
         if (activePlayer == null || plateA == null || plateB == null || door == null)
         {
             Debug.LogError("Echo Shift: unassigned components. Use Homework 4 > Create Echo Shift Level.");
             enabled = false;
+            yield break;
+        }
+
+        // Load optional configuration before the first recorded cycle.
+        yield return StartCoroutine(LoadLiveOpsConfig());
+        startingPosition = activePlayer.Position;
+        activePlayer.ResetAt(startingPosition);
+        isLoading = false;
+        running = true;
+        message = liveEventActive
+            ? "Resonance Rush is active! Plan shorter loops."
+            : "Record a loop on plate A. Next loop, stand on B. Then run through the door!";
+        messageUntil = Time.time + 7f;
+    }
+
+    private IEnumerator LoadLiveOpsConfig()
+    {
+        if (!string.IsNullOrWhiteSpace(liveOpsRemoteUrl))
+        {
+            yield return StartCoroutine(ReadConfig(liveOpsRemoteUrl.Trim()));
+            if (loadedFromRemote) yield break;
+            Debug.LogWarning("Echo Shift Live Ops: remote configuration unavailable; trying StreamingAssets.");
+        }
+
+        string localUrl = Application.streamingAssetsPath.TrimEnd('/', '\\') + "/echo-liveops.json";
+        if (!localUrl.Contains("://"))
+            localUrl = new Uri(localUrl).AbsoluteUri;
+        yield return StartCoroutine(ReadConfig(localUrl));
+    }
+
+    private IEnumerator ReadConfig(string url)
+    {
+        using (UnityWebRequest request = UnityWebRequest.Get(url))
+        {
+            request.timeout = 6;
+            yield return request.SendWebRequest();
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogWarning("Echo Shift Live Ops: cannot read config from " + url + " (" + request.error + "). Base rules preserved.");
+                yield break;
+            }
+
+            try
+            {
+                LiveOpsConfig config = JsonUtility.FromJson<LiveOpsConfig>(request.downloadHandler.text);
+                // A readable JSON document counts as a valid config source even if no event is active.
+                loadedFromRemote = !string.IsNullOrWhiteSpace(liveOpsRemoteUrl)
+                    && string.Equals(url, liveOpsRemoteUrl.Trim(), StringComparison.Ordinal);
+                ApplyConfig(config);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("Echo Shift Live Ops: invalid JSON; base rules preserved. " + ex.Message);
+            }
+        }
+    }
+
+    private void ApplyConfig(LiveOpsConfig config)
+    {
+        if (config == null || !config.enabled) return;
+
+        DateTimeOffset start, end;
+        bool hasStart = DateTimeOffset.TryParse(config.startUtc, CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal, out start);
+        bool hasEnd = DateTimeOffset.TryParse(config.endUtc, CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal, out end);
+        if (!hasStart || !hasEnd || end <= start)
+        {
+            Debug.LogWarning("Echo Shift Live Ops: invalid UTC date window. Ignoring event.");
             return;
         }
-        startingPosition = activePlayer.Position;
-        running = true;
-        message = "Record a loop on plate A. Next loop, stand on B. Then run through the door!";
-        messageUntil = Time.time + 7f;
+
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        if (now < start || now > end) return;
+
+        if (config.loopSeconds < 3f || config.loopSeconds > 30f || config.maxLoops < 2 || config.maxLoops > 20
+            || config.maxEchoes < 1 || config.maxEchoes > 3)
+        {
+            Debug.LogWarning("Echo Shift Live Ops: event settings outside safe limits. Ignoring event.");
+            return;
+        }
+
+        loopSeconds = config.loopSeconds;
+        maxLoops = config.maxLoops;
+        maxEchoes = config.maxEchoes;
+        liveEventActive = true;
+        liveEventBanner = string.IsNullOrWhiteSpace(config.banner) ? "LIVE EVENT" : config.banner;
+        Debug.Log("Echo Shift Live Ops: active event " + config.eventId +
+                  ", loopSeconds=" + loopSeconds + ", maxLoops=" + maxLoops);
     }
 
     private void FixedUpdate()
@@ -134,11 +247,22 @@ public sealed class EchoLoopManager : MonoBehaviour
     {
         int size = Mathf.Max(15, Mathf.RoundToInt(Screen.height * .028f));
         GUIStyle label = new GUIStyle(GUI.skin.box) { fontSize = size, wordWrap = true };
+        if (isLoading)
+        {
+            GUI.Box(new Rect(12, 12, Screen.width - 24, 46), "ECHO SHIFT | Loading rules...", label);
+            return;
+        }
         string heading = "ECHO SHIFT  |  LOOP " + loopNumber + "/" + maxLoops +
                          "  |  TIME " + Mathf.CeilToInt(Mathf.Max(0f, loopSeconds - elapsed)) +
                          "s  |  ECHOES " + ghosts.Count + "/" + maxEchoes;
         GUI.Box(new Rect(12, 12, Screen.width - 24, 46), heading, label);
-        GUI.Box(new Rect(12, 62, Screen.width - 24, 75),
+        float controlsY = 62f;
+        if (liveEventActive)
+        {
+            GUI.Box(new Rect(12, 62, Screen.width - 24, 44), liveEventBanner, label);
+            controlsY = 112f;
+        }
+        GUI.Box(new Rect(12, controlsY, Screen.width - 24, 75),
             "A/D: Move  |  SPACE: Jump  |  R: Restart  |  ESC: Main Menu\n" +
             "PLATE A: " + (plateA != null && plateA.IsPressed ? "ON" : "OFF") +
             "     PLATE B: " + (plateB != null && plateB.IsPressed ? "ON" : "OFF") +

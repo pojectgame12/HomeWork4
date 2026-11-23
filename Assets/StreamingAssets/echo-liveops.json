@@ -1,0 +1,10 @@
+{
+  "eventId": "resonance-rush-2026",
+  "enabled": true,
+  "startUtc": "2026-11-23T00:00:00Z",
+  "endUtc": "2026-12-15T23:59:59Z",
+  "loopSeconds": 8.0,
+  "maxLoops": 6,
+  "maxEchoes": 3,
+  "banner": "LIVE EVENT: RESONANCE RUSH"
+}
