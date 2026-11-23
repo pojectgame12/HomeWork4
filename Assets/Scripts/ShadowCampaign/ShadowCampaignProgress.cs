@@ -109,10 +109,9 @@ public static class ShadowCampaignProgress
         float energy = Mathf.Max(0f, session.remainingEnergy);
         int medal = won ? (hintUsed ? 1 : energy >= 35f ? 3 : 2) : 0;
         LastResult = new Result
-       LastResult = new Result
        {
             exists = true,
-    won = won,
+             won = won,
     stage = stage,
     medal = medal,
     seconds = elapsed,
