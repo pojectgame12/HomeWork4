@@ -9,9 +9,9 @@ public sealed class GameMenuUI : MonoBehaviour
 
     private void OnGUI()
     {
-        float scale = Mathf.Min(Screen.width / 1280f, Screen.height / 720f);
-        GUI.matrix = Matrix4x4.TRS(new Vector3((Screen.width - 1280f * scale) * .5f,
-            (Screen.height - 720f * scale) * .5f, 0f), Quaternion.identity, new Vector3(scale, scale, 1f));
+        float scale = Mathf.Min(Screen.width / ShadowGameTuning.ReferenceScreenWidth, Screen.height / ShadowGameTuning.ReferenceScreenHeight);
+        GUI.matrix = Matrix4x4.TRS(new Vector3((Screen.width - ShadowGameTuning.ReferenceScreenWidth * scale) * .5f,
+            (Screen.height - ShadowGameTuning.ReferenceScreenHeight * scale) * .5f, 0f), Quaternion.identity, new Vector3(scale, scale, 1f));
         GUI.Box(new Rect(270, 105, 740, 500), "");
         GUIStyle title = new GUIStyle(GUI.skin.label) { fontSize = 52, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
         title.normal.textColor = new Color(.35f, .94f, .90f);
